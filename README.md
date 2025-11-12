@@ -26,6 +26,8 @@ Installation Notes
 Run pip install pygame before building the executable with PyInstaller.
 For the .exe build: pyinstaller --onefile --add-data "sound_effect;sound_effect" talktome_bot.py (ensures ding.mp3 is bundled).
 
+Added Dist folder with the .exe so users can run program from desktop.
+
 [v1.2.0] - 2025-11-05
 Added
 
