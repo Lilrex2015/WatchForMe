@@ -5,11 +5,12 @@ import queue
 import time
 import re
 import random
+import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import winsound  # Built-in for Windows
+from pygame import mixer  # For MP3/WAV playback; install with `pip install pygame`
 
 class RedirectText:
     """Class to redirect console output to Tkinter text widget"""
@@ -47,6 +48,9 @@ class TalkToMeBot:
         self.thread = None
         self.stop_event = threading.Event()
         
+        # Default sound file path
+        self.default_sound_file = os.path.join(os.path.dirname(__file__), 'sound_effect', 'ding.mp3')
+        
         self.create_widgets()
         
     def create_widgets(self):
@@ -68,10 +72,16 @@ class TalkToMeBot:
         self.max_retry_interval = tk.IntVar(value=30)
         ttk.Entry(settings_frame, textvariable=self.max_retry_interval, width=10).grid(row=1, column=1, padx=5, pady=5, sticky="w")
         
-        ttk.Label(settings_frame, text="Sound File Path (.wav):").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        # Sound settings row
+        ttk.Label(settings_frame, text="Sound File Path (.mp3/.wav):").grid(row=2, column=0, padx=5, pady=5, sticky="w")
         self.sound_file_var = tk.StringVar(value="")
-        ttk.Entry(settings_frame, textvariable=self.sound_file_var, width=30).grid(row=2, column=1, padx=5, pady=5, sticky="w")
+        ttk.Entry(settings_frame, textvariable=self.sound_file_var, width=25).grid(row=2, column=1, padx=5, pady=5, sticky="w")
         ttk.Button(settings_frame, text="Browse", command=self.browse_sound_file).grid(row=2, column=2, padx=5, pady=5)
+        
+        # Mute checkbox
+        self.mute_sound_var = tk.BooleanVar(value=False)
+        self.mute_checkbutton = ttk.Checkbutton(settings_frame, text="Mute Sound", variable=self.mute_sound_var)
+        self.mute_checkbutton.grid(row=2, column=3, padx=10, pady=5, sticky="w")
         
         ttk.Label(settings_frame, text="Max Retries:").grid(row=3, column=0, padx=5, pady=5, sticky="w")
         self.max_retries = tk.IntVar(value=1000)
@@ -101,7 +111,7 @@ class TalkToMeBot:
         self.text_redirect = RedirectText(self.log_text)
         
     def browse_sound_file(self):
-        file_path = filedialog.askopenfilename(filetypes=[("WAV Files", "*.wav")])
+        file_path = filedialog.askopenfilename(filetypes=[("Audio Files", "*.mp3 *.wav")])
         if file_path:
             self.sound_file_var.set(file_path)
         
@@ -175,15 +185,24 @@ class TalkToMeBot:
             print("Script stopped")
             
     def play_alert_sound(self):
-        sound_file = self.sound_file_var.get()
-        if sound_file:
-            try:
-                winsound.PlaySound(sound_file, winsound.SND_ASYNC)  # Non-blocking
-                print(f"Playing sound: {sound_file}")
-            except Exception as e:
-                print(f"Error playing sound: {e}")
-        else:
-            print("No sound file specified.")
+        if self.mute_sound_var.get():
+            print("Sound alert muted.")
+            return
+        
+        sound_file = self.sound_file_var.get().strip()
+        if not sound_file:
+            sound_file = self.default_sound_file
+            if not os.path.exists(sound_file):
+                print(f"Default sound file not found: {sound_file}. Skipping alert.")
+                return
+        
+        try:
+            mixer.init()
+            mixer.music.load(sound_file)
+            mixer.music.play()  # Non-blocking
+            print(f"Playing sound: {sound_file}")
+        except Exception as e:
+            print(f"Error playing sound: {e}")
             
     def run_script(self):
         try:
