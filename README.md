@@ -1,3 +1,5 @@
+This project is completed
+
 # WatchForMe
 A lightweight, GUI-based automation tool built with Python and Selenium to monitor the TalkToMe.com members/programs page for specific value thresholds (e.g., rates). It refreshes the page when values are below targets, clicks a "Connect" button when a target is reached, and plays a customizable sound alert. Designed for personal use in monitoring dynamic web content, with pause/resume functionality and logging.
 
